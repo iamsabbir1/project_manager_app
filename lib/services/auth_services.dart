@@ -4,18 +4,52 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  final String baseUrl = "http://127.0.0.1:8000/";
+  final String baseUrl = "http://192.168.0.197:8000";
 
-  Future<String?> login(String username, String password) async {
+  Future<String?> fetchToken(String email, String password) async {
+    Logger().i(email);
+    Logger().i(password);
+    final url = Uri.parse("$baseUrl/api/contractor/token/");
+    Logger().i(url);
     final response = await http.post(
-      Uri.parse("$baseUrl/api/token/"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"username": username, "password": password}),
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(
+        <String, String>{
+          'email': email,
+          'password': password,
+        },
+      ),
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['access']; // Return the access token
+      return data['token'];
+    } else {
+      Logger().i(response.statusCode);
+      return null;
+    }
+  }
+
+  Future<String?> login(String email, String password) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/contractor/token/"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode(
+        {
+          "email": email,
+          "password": password,
+        },
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['token'];
     } else {
       Logger().i('Login failed: ${response.body}');
       return null;

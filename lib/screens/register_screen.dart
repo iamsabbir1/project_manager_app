@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
@@ -18,17 +20,57 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  void registerContractor() async {
-    final url = Uri.parse('http://127.0.0.1:8000/api');
+  String _name = '';
+  String _email = '';
+  String _password = '';
+  @override
+  void initState() {
+    super.initState();
+    fetchContractorToken();
+  }
+
+  void registerContractor(String name, String email, String password) async {
+    const String baseUrl = 'http://127.0.0.1:8000/api/contractor/create/';
+    final url = Uri.parse(baseUrl);
+
+    final response = await http.post(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(
+        <String, String>{
+          'name': name,
+          'email': email,
+          'password': password,
+        },
+      ),
+    );
+
+    if (response.statusCode == 201) {
+      Logger().i('succesfully register contractor');
+    } else {
+      Logger().e(response.statusCode);
+      throw Exception('Failed to load projects');
+    }
+  }
+
+  void fetchContractorToken() async {
+    const String baseUrl = 'http://127.0.0.1:8000/api/contractor/token/';
+    final url = Uri.parse(baseUrl);
     Logger().i(url);
-    final response = await http.get(url);
+    final response = await http.post(url,
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(<String, String>{
+          'email': 'contractor3@example.com',
+          'password': 'testpass123@',
+        }));
 
     if (response.statusCode == 200) {
-      // If the server returns a 200 OK response,
-      // parse the JSON.
+      Logger().i('succesfully fetch token');
     } else {
-      // If the server did not return a 200 OK response,
-      // throw an exception.
       throw Exception('Failed to load projects');
     }
   }
@@ -91,7 +133,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       CustomElevatedButton(
                         isLoading: false,
                         onPressed: () {
-                          registerContractor();
+                          registerContractor(
+                            'Contractor 5',
+                            'contractor5@example.com',
+                            'testpass123@',
+                          );
                         },
                         title: 'Register',
                       ),

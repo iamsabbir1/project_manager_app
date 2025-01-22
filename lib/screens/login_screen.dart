@@ -8,6 +8,7 @@ import '../models/contractor.dart';
 import '../widgets/custom_text_button.dart';
 
 import '../services/navigation_services.dart';
+import '../services/auth_services.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,21 +21,22 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _email;
   String? _password;
   final _formKey = GlobalKey<FormState>();
+  String? _token;
+  bool _isLoading = false;
 
-  void onSaved() {
+  void login() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      _token = await AuthService().login(_email!, _password!);
+
+      if (_token != null) {
+        Logger().i('Token: $_token');
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
     }
-
-    final contractor = Contractor(
-      name: 'Admin',
-      email: _email!,
-      phone: 01339481923,
-      status: 'current',
-    );
-
-    Logger().i(contractor.id);
-    Logger().i(_password);
   }
 
   @override
@@ -63,7 +65,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           _email = value;
                         });
                       },
-                      regEx: '^[a-zA-Z0-9._%+-]+@gmail\\.com\$',
+                      //regEx: '^[a-zA-Z0-9._%+-]+@gmail\\.com\$',
+                      regEx: '',
                       hintText: 'Email',
                       errorMessage: 'Please enter an valid email',
                       title: 'Email',
@@ -89,9 +92,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40.0),
                     child: CustomElevatedButton(
-                      isLoading: false,
+                      isLoading: _isLoading,
                       onPressed: () {
-                        onSaved();
+                        login();
                       },
                       title: 'Login',
                     ),
